@@ -21,3 +21,10 @@ body {
   width: 120px;
   height: 120px;
 }
+
+.status {
+  margin-bottom: 10px;
+}
+.game {
+  display: flex;
+}

@@ -1,15 +1,61 @@
-import { MouseEventHandler, useState } from "react";
+import { useState } from "react";
 
-export default function Board() {
-  const [squares, setSquares] = useState(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState(true);
+export default function Game() {
+  const [history, setHistory] = useState<Array<Array<string>>>([
+    Array(9).fill(null),
+  ]);
+  const [currentMove, setCurrentMove] = useState(0);
+  const xIsNext = currentMove % 2 === 0 ? true : false;
+  const currentSquares = history[currentMove];
+
+  const jumpTo = (nextMove: number) => {
+    setCurrentMove(nextMove);
+  };
+
+  const handlePlay = (nextSquares: string[]): void => {
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1);
+  };
+
+  const moves = history.map((_, move) => {
+    let desc = "";
+    if (move === 0) {
+      desc = "Go to game start";
+    } else {
+      desc = `Go to move ${move}`;
+    }
+
+    return (
+      <li key={move}>
+        <button onClick={() => jumpTo(move)}>{desc}</button>
+      </li>
+    );
+  });
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+      </div>
+      <div className="game-info">
+        <ol>{moves}</ol>
+      </div>
+    </div>
+  );
+}
+interface GameInfo {
+  xIsNext: boolean;
+  squares: Array<string>;
+  onPlay: (nextSquare: string[]) => void;
+}
+function Board({ xIsNext, squares, onPlay }: GameInfo) {
   const handleClick = (i: number) => {
     if (squares[i] || calculateWinner(squares)) return;
 
     const nextSquares = squares.slice();
     nextSquares[i] = xIsNext ? "X" : "O";
-    setXIsNext(!xIsNext);
-    setSquares(nextSquares);
+    onPlay(nextSquares);
   };
 
   const winner = calculateWinner(squares);
@@ -33,11 +79,13 @@ export default function Board() {
     </>
   );
 }
-interface propsSquare {
+function Square({
+  value,
+  onSquareClick,
+}: {
   value: string;
-  onSquareClick: MouseEventHandler;
-}
-const Square = ({ value, onSquareClick }: propsSquare) => {
+  onSquareClick: () => void;
+}) {
   return (
     <div>
       <button className="square" onClick={onSquareClick}>
@@ -45,9 +93,9 @@ const Square = ({ value, onSquareClick }: propsSquare) => {
       </button>
     </div>
   );
-};
+}
 
-const calculateWinner = (Squares: [][]) => {
+const calculateWinner = (Squares: Array<string>) => {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
